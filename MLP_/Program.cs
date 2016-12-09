@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MLP_.Domain.TransferFunction;
 
 namespace MLP_
 {
@@ -12,7 +8,11 @@ namespace MLP_
         {
             int[] topology = { 2, 3, 1 };
 
-            MLP Net = new MLP(topology);
+            double[] inputs = { 0, 1 };
+
+            MLP Net = new MLP(topology, new HyperbolicTangentTransferFunction());
+
+            Net.FeedForward(inputs);
         }
     }
 }

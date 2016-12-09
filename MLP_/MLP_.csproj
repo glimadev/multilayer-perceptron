@@ -41,12 +41,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\Connection.cs" />
-    <Compile Include="Interface\IMLP.cs" />
-    <Compile Include="Models\Layer.cs" />
-    <Compile Include="MLP.cs" />
-    <Compile Include="Models\NeuralNet.cs" />
-    <Compile Include="Models\Neuron.cs" />
+    <Compile Include="Domain\Models\Connection.cs" />
+    <Compile Include="Application\MLP\IMLP.cs" />
+    <Compile Include="Domain\Models\Layer.cs" />
+    <Compile Include="Application\MLP\MLP.cs" />
+    <Compile Include="Domain\Models\NeuralNet.cs" />
+    <Compile Include="Domain\Models\Neuron.cs" />
+    <Compile Include="Domain\TransferFunction\ITransferFunction.cs" />
+    <Compile Include="Domain\TransferFunction\HyperbolicTangentTransferFunction.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
