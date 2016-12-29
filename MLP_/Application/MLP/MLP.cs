@@ -11,6 +11,8 @@ namespace MLP_
     {
         NeuralNet _net;
         ITransferFunction _transferFunction;
+        static double k_recentAvgSmoothingFactor = 100.00;
+        double m_recentAvgError = 0;
 
         public MLP(int[] topology, ITransferFunction transferFunction) 
         {
@@ -83,7 +85,7 @@ namespace MLP_
             {
                 double delta = targets[n] - outputLayer.Neuron[n].Output;
                 
-                error = delta * delta;
+                error += delta * delta;
             }
 
             error = error / (outputLayer.Neuron.Count - 1);// get average error squared
@@ -92,15 +94,9 @@ namespace MLP_
 
             // Implement a recent average measurement
 
-            //m_recentAvgError =
-            //        (m_recentAvgError * k_recentAvgSmoothingFactor + m_error)
-            //        / (k_recentAvgSmoothingFactor + 1.0);
-
-            // error
-            //
-
-            //
-            // Gradients
+            m_recentAvgError =
+                    (m_recentAvgError * k_recentAvgSmoothingFactor + error)
+                    / (k_recentAvgSmoothingFactor + 1.0);
 
             // Calculate output layer gradients
             for (int n = 0; n < (outputLayer.Neuron.Count - 1); n++)
@@ -116,21 +112,20 @@ namespace MLP_
 
                 for (int n = 0; n < hiddenLayer.Neuron.Count; n++)
                 {
-                    hiddenLayer.Neuron[n].calcHiddenGradients(nextLayer, _transferFunction);
+                    hiddenLayer.Neuron[n].CalcHiddenGradients(nextLayer, _transferFunction);
                 }
             }
 
             // For all layers from outputs to first hidden layer,
             // update connection weights
+            for (int i = (_net.Layer.Count - 1); i > 0; --i)
+            {
+                Layer currLayer = _net.Layer[i];
+                Layer prevLayer = _net.Layer[i - 1];
 
-            //for (unsigned i = (m_layers.size() - 1); i > 0; --i)
-            //{
-            //    Layer & currLayer = m_layers[i];
-            //    Layer & prevLayer = m_layers[i - 1];
-
-            //    for (unsigned n = 0; n < (currLayer.size() - 1); ++n) // exclude bias
-            //        currLayer[n].updateInputWeights(prevLayer);
-            //}
+                for (int n = 0; n < (currLayer.Neuron.Count - 1); ++n) // exclude bias
+                    currLayer.Neuron[n].UpdateInputWeights(prevLayer);
+            }
         }
 
         public void GetResults()

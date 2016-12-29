@@ -14,6 +14,10 @@ namespace MLP_
 
         public int NeuronIndex { get; set; }
 
+        static double eta = 0.15;   // [0.0..1.0] overall net training rate
+
+        static double alpha = 0.5; // [0.0..n] multiplier of last weight change (momentum)
+
         public Neuron(int numOutputs, int j)
         {
             Random random = new Random();
@@ -50,9 +54,50 @@ namespace MLP_
             LocalGradient = delta * transferFunction.EvaluateDerivative(delta);
         }
 
-        internal void calcHiddenGradients(Layer nextLayer, ITransferFunction _transferFunction)
+        public void CalcHiddenGradients(Layer nextLayer, ITransferFunction _transferFunction)
         {
-            throw new NotImplementedException();
+            double dow = SumDOW(nextLayer);
+
+            LocalGradient = dow * _transferFunction.EvaluateDerivative(Output);
+        }
+
+        private double SumDOW(Layer nextLayer)
+        {
+            double sum = 0.0;
+
+            // Sum our contributions of the errors at the nodes we feed.
+            int neurons = (nextLayer.Neuron.Count -1); // exclude bias neuron
+
+            for (int n = 0; n < neurons; ++n)
+                sum += Connections[n].Weight * nextLayer.Neuron[n].LocalGradient;
+
+            return sum;
+        }
+
+        public void UpdateInputWeights(Layer prevLayer)
+        {
+            // The weights to be updated are in the Connection container
+            // in the neurons in the preceding layer
+
+            for (int n = 0; n < prevLayer.Neuron.Count; ++n)
+            {
+                Neuron neuron = prevLayer.Neuron[n];
+
+                double oldDeltaWeight = neuron.Connections[NeuronIndex].DeltaWeight;
+
+                double newDeltaWeight =
+                    // Individual input, magnified by the gradient and train rate:
+                        eta
+                        * neuron.Output
+                        * LocalGradient
+                    // Also add momentum = a fraction of the previous delta weight;
+                        + alpha
+                        * oldDeltaWeight
+                        ;
+
+                neuron.Connections[NeuronIndex].DeltaWeight = newDeltaWeight;
+                neuron.Connections[NeuronIndex].Weight += newDeltaWeight;
+            }
         }
     }
 }
