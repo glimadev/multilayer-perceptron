@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Domain\TrainingData.cs" />
     <Compile Include="Domain\Models\Connection.cs" />
     <Compile Include="Application\MLP\IMLP.cs" />
     <Compile Include="Domain\Models\Layer.cs" />
@@ -54,6 +55,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Application\Training\Samples\out_xor.txt" />
+    <Content Include="Application\Training\Samples\out_or.txt" />
+    <Content Include="Application\Training\Samples\out_and.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

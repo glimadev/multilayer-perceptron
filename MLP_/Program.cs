@@ -1,4 +1,6 @@
-﻿using MLP_.Domain.TransferFunction;
+﻿using MLP_.Application.Training;
+using MLP_.Domain.TransferFunction;
+using System;
 
 namespace MLP_
 {
@@ -6,13 +8,15 @@ namespace MLP_
     {
         static void Main(string[] args)
         {
-            int[] topology = { 2, 3, 1 };
+            TrainingData trainData = new TrainingData("Samples/out_xor.txt");
+
+            MLP Net = new MLP(trainData.getTopology(), new HyperbolicTangentTransferFunction());
+
+            Net.Fit(trainData.getTrainData(), trainData.getTargetData());
 
             double[] inputs = { 0, 1 };
 
-            MLP Net = new MLP(topology, new HyperbolicTangentTransferFunction());
-
-            Net.FeedForward(inputs);
+            Console.ReadLine();
         }
     }
 }

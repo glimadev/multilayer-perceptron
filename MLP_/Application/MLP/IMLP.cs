@@ -4,7 +4,7 @@ namespace MLP_
     interface IMLP
     {
         void FeedForward(double[] inputs);
-        void BackPropagation();
-        void GetResults();
+        void BackPropagation(double[] targets);
+        double[] GetResults();
     }
 }

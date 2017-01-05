@@ -14,19 +14,17 @@ namespace MLP_
 
         public int NeuronIndex { get; set; }
 
-        static double eta = 0.15;   // [0.0..1.0] overall net training rate
+        static double eta = 0.15; // [0.0..1.0] overall net training rate
 
         static double alpha = 0.5; // [0.0..n] multiplier of last weight change (momentum)
 
-        public Neuron(int numOutputs, int j)
+        public Neuron(int numOutputs, int j, Random random)
         {
-            Random random = new Random();
-
             NeuronIndex = j;
 
             Connections = new List<Connection>();
 
-            for (int i = 0; i < numOutputs; i++)
+            for (int i = 0; i < numOutputs; ++i)
             {
                 Connections.Add(new Connection());
                 Connections[i].Weight = random.NextDouble();
@@ -39,7 +37,7 @@ namespace MLP_
 
             // Sum the previous layer's outputs (which are our inputs)
             // Include the bias node from the previous layer.
-            for (int k = 0; k < prevLayer.Neuron.Count; k++)
+            for (int k = 0; k < prevLayer.Neuron.Count; ++k)
             {
                 sum += prevLayer.Neuron[k].Output * prevLayer.Neuron[k].Connections[NeuronIndex].Weight;
             }

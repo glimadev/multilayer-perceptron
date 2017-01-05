@@ -13,8 +13,10 @@ namespace MLP_
         ITransferFunction _transferFunction;
         static double k_recentAvgSmoothingFactor = 100.00;
         double m_recentAvgError = 0;
+        double error;
+        Random random = new Random();
 
-        public MLP(int[] topology, ITransferFunction transferFunction) 
+        public MLP(int[] topology, ITransferFunction transferFunction)
         {
             _transferFunction = transferFunction;
 
@@ -25,7 +27,7 @@ namespace MLP_
 
         private void CreateNetBasedOnTopology(int[] topology)
         {
-            for (int i = 0; i < topology.Length; i++)
+            for (int i = 0; i < topology.Length; ++i)
             {
                 int numNeurons = topology[i];
 
@@ -38,10 +40,10 @@ namespace MLP_
 
                 // We have a new layer, now fill it with neurons, and
                 // add a bias neuron in each layer.
-                for (int j = 0; j < (numNeurons + 1); j++)
+                for (int j = 0; j < (numNeurons + 1); ++j)
                 {
                     //Also Initialize random weights
-                    layer.Neuron.Add(new Neuron(numOutputs, j));
+                    layer.Neuron.Add(new Neuron(numOutputs, j, random));
                 }
 
                 // Force the bias node's output to 1.0 (it was the last neuron pushed in this layer):
@@ -54,24 +56,24 @@ namespace MLP_
         public void FeedForward(double[] input) //Layer prevLayer)
         {
             // Assign (latch) the input values into the input neurons
-            for (int i = 0; i < input.Length; i++)
+            for (int i = 0; i < input.Length; ++i)
             {
                 _net.Layer[0].Neuron[i].Output = input[i];
             }
-            
+
             // forward propagate
-            for (int l = 1; l < _net.Layer.Count; l++) // exclude input layer
+            for (int l = 1; l < _net.Layer.Count; ++l) // exclude input layer
             {
                 Layer prevLayer = _net.Layer[l - 1];
                 Layer currLayer = _net.Layer[l];
 
                 int numNeuron = currLayer.Neuron.Count - 1; // exclude bias neuron
 
-                for (int n = 0; n < numNeuron; n++)
+                for (int n = 0; n < numNeuron; ++n)
                 {
                     currLayer.Neuron[n].FeedForward(prevLayer, _transferFunction);
                 }
-            }                
+            }
         }
 
         public void BackPropagation(double[] targets)
@@ -79,16 +81,16 @@ namespace MLP_
             // Calculate overall net error (RMS of output neuron errors)
             Layer outputLayer = _net.Layer.LastOrDefault();
 
-            double error = 0;
+            error = 0;
 
-            for (int n = 0; n < (outputLayer.Neuron.Count - 1); n++)
+            for (int n = 0; n < (outputLayer.Neuron.Count - 1); ++n)
             {
                 double delta = targets[n] - outputLayer.Neuron[n].Output;
-                
+
                 error += delta * delta;
             }
 
-            error = error / (outputLayer.Neuron.Count - 1);// get average error squared
+            error /= (outputLayer.Neuron.Count - 1);// get average error squared
 
             error = Math.Sqrt(error);//RMS
 
@@ -99,18 +101,18 @@ namespace MLP_
                     / (k_recentAvgSmoothingFactor + 1.0);
 
             // Calculate output layer gradients
-            for (int n = 0; n < (outputLayer.Neuron.Count - 1); n++)
+            for (int n = 0; n < (outputLayer.Neuron.Count - 1); ++n)
             {
                 outputLayer.Neuron[n].CalcOutputGradients(targets[n], _transferFunction);
             }
 
             // Calculate hidden layer gradients
-            for (int l = (_net.Layer.Count - 2); l > 0; l--)
+            for (int l = (_net.Layer.Count - 2); l > 0; --l)
             {
                 Layer hiddenLayer = _net.Layer[l];
                 Layer nextLayer = _net.Layer[l + 1];
 
-                for (int n = 0; n < hiddenLayer.Neuron.Count; n++)
+                for (int n = 0; n < hiddenLayer.Neuron.Count; ++n)
                 {
                     hiddenLayer.Neuron[n].CalcHiddenGradients(nextLayer, _transferFunction);
                 }
@@ -128,9 +130,63 @@ namespace MLP_
             }
         }
 
-        public void GetResults()
+        public double[] GetResults()
         {
-            throw new NotImplementedException();
+            Layer lastLayer = _net.Layer.LastOrDefault();
+
+            double[] resultVals = new double[lastLayer.Neuron.Count - 1];
+
+            // exclude last neuron (bias neuron)
+            for (int n = 0; n < (lastLayer.Neuron.Count - 1); ++n)
+                resultVals[n] = lastLayer.Neuron[n].Output;
+
+            return resultVals;
+        }
+
+        public void ShowVectorVals(string label, double[] v)
+        {
+            Console.Write(label + " ");
+
+            for (int i = 0; i < v.Length; ++i)
+                Console.Write(v[i] + " ");
+
+            Console.WriteLine("\n");
+        }
+
+        public void Fit(List<double[]> trainData, List<double[]> targetData)
+        {
+            int trainingPass = 0;
+
+            while (trainingPass < trainData.Count) 
+            {
+                Console.WriteLine("Pass " + trainingPass);
+
+                // Get new input data and feed it forward:
+                double[] inputVals = trainData.ElementAt(trainingPass);
+                ShowVectorVals("Inputs:", inputVals);
+                FeedForward(inputVals);
+
+                // Collect the net's actual output results:
+                double[] resultVals = GetResults();
+                ShowVectorVals("Outputs:", resultVals);
+
+                // Train the net what the outputs should have been:
+                double[] targetVals = targetData.ElementAt(trainingPass);
+                ShowVectorVals("Targets:", targetVals);
+                BackPropagation(targetVals);
+
+                // Report how well the training is working, average over recent samples:
+                Console.WriteLine("Net current error: " + error);
+                Console.WriteLine("Net recent average error: " + m_recentAvgError);
+
+                if (trainingPass > 100 && m_recentAvgError < 0.05)
+                {
+                    Console.WriteLine("average error acceptable -> break " + m_recentAvgError);
+                    break;
+                }
+
+                trainingPass++;
+            }
         }
     }
 }
